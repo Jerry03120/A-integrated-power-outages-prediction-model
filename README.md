@@ -35,9 +35,9 @@ Until then, this repository contains the **complete model training code and repr
 After uploading parquet files to `data/`, run the training:
 
 ```bash
-python train_optimized.py data/lag1.parquet Unified LightGBM 1 outputs/ --resume
-python train_optimized.py data/lag12.parquet Ensemble XGBoost 12 outputs/ --resume
-python train_optimized.py data/lag24.parquet Unified LightGBM 24 outputs/ --resume
+python train_optimized_final.py data/lag1.parquet Unified LightGBM 1 outputs/ --resume
+python train_optimized_final.py data/lag12.parquet Ensemble XGBoost 12 outputs/ --resume
+python train_optimized_final.py data/lag24.parquet Unified LightGBM 24 outputs/ --resume
 
 or
 
