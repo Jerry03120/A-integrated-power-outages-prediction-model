@@ -48,10 +48,9 @@ This ensemble strategy aligns with best practices for **high-stakes forecasting 
 |-----------|-------------|
 | Lagged Feature Engineering | Generation of meteorological lag features at 1h, 12h, and 24h intervals |
 | Event Duration Modeling | Extraction of hazard duration using NWS event start/end timestamps |
-| Learning Algorithms | LightGBM and XGBoost for classification and regression tasks |
+| Learning Algorithms | LightGBM and XGBoost for regression tasks |
 | Optimization | Bayesian hyperparameter tuning for model generalization |
 | Explainability | Permutation-based feature importance for interpretability |
-| Resilience | Checkpointing, resume functionality, and seed-controlled execution |
 | HPC Scalability | Native support for Slurm-based execution on TAMU HPRC |
 
 ---
