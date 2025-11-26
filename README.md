@@ -74,17 +74,16 @@ Until then, the repository provides the complete modeling code, workflow, and re
 
 ## 6. Execution
 
-### 6.1 Local or Command-Line Execution
+### 6.1 Local or Command-Line Execution  
+### 6.2 HPC Execution (TAMU HPRC, Slurm)
 
 ```bash
+# Local / Command-Line Execution
 python train_optimized_final.py data/lag1.parquet Ensemble LightGBM 1 outputs/ --resume
 python train_optimized_final.py data/lag12.parquet Ensemble XGBoost 12 outputs/ --resume
 python train_optimized_final.py data/lag24.parquet Ensemble LightGBM 24 outputs/ --resume
 
-### 6.2 HPC Execution (TAMU HPRC, Slurm)
-
-Submit batch jobs using the following Slurm commands:
-
-```bash
+# HPC Execution (TAMU HPRC, Slurm)
 sbatch submit_part1_unified_improved.sh
 sbatch submit_part2_ensemble_improved.sh
+
