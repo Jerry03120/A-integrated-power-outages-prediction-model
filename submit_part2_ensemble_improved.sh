@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=train_part2
 #SBATCH --partition=xlong
-#SBATCH --time=96:00:00
+#SBATCH --time=10:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=64G
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=256G
 #SBATCH --array=0-5
 #SBATCH -o logs/part2-%A_%a.out
 #SBATCH -e logs/part2-%A_%a.err
