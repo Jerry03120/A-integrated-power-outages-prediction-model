@@ -19,6 +19,7 @@ KEY IMPROVEMENTS (from base version):
 9. Fixed EVENT_TYPE permutation importance calculation for Unified models
 10. Fixed features list creation timing issue
 11. Fixed categorical dtype handling in permutation importance
+12. Fixed COMPUTE_PERMUTATION_IMPORTANCE flag to ensure it works for both Unified and Ensemble
 
 FEATURES:
 - Unified: EVENT_TYPE as categorical predictor, ONE model (plus seed-ensemble predictions)
@@ -1126,11 +1127,18 @@ def run_single_model(df: pd.DataFrame, config: Config, base_output_dir: Path, re
         saver.save_metrics(metrics)
         saver.save_summary_statistics(predictions)
 
+        # FIXED: Always save importance if COMPUTE_PERMUTATION_IMPORTANCE is True and we have data
         if config.COMPUTE_PERMUTATION_IMPORTANCE and all_importance:
+            logger.info(f"Saving permutation importance results ({len(all_importance)} test runs)...")
             for imp_df in all_importance:
                 test_num = int(imp_df['test_num'].iloc[0])
                 saver.save_permutation_importance(imp_df, test_num)
             saver.save_aggregated_permutation_importance(all_importance)
+        else:
+            if config.COMPUTE_PERMUTATION_IMPORTANCE:
+                logger.warning(f"⚠️ COMPUTE_PERMUTATION_IMPORTANCE is True but no importance data to save")
+            logger.info(f"Debug: COMPUTE_PERMUTATION_IMPORTANCE={config.COMPUTE_PERMUTATION_IMPORTANCE}, "
+                       f"len(all_importance)={len(all_importance)}")
     else:
         logger.info("No predictions/metrics to save because test was skipped.")
 
@@ -1161,7 +1169,9 @@ def run_ensemble_models(df: pd.DataFrame, config: Config, base_output_dir: Path,
             event_config.ALGORITHM = config.ALGORITHM
             event_config.LAG = config.LAG
             event_config.EVENT_TYPE_VALUE = event_type
-            # propagate ensemble flags
+            # FIXED: Propagate COMPUTE_PERMUTATION_IMPORTANCE flag
+            event_config.COMPUTE_PERMUTATION_IMPORTANCE = config.COMPUTE_PERMUTATION_IMPORTANCE
+            # Propagate ensemble flags
             event_config.ENSEMBLE_RETRAIN_EACH_TEST = config.ENSEMBLE_RETRAIN_EACH_TEST
             event_config.BOOTSTRAP_TRAIN = config.BOOTSTRAP_TRAIN
             event_config.ENSEMBLE_FRACTION_FLOOR = config.ENSEMBLE_FRACTION_FLOOR
@@ -1186,7 +1196,8 @@ def main(
     algorithm: str = 'LightGBM',
     lag: int = 1,
     base_output_dir: Optional[str] = None,
-    resume: bool = False
+    resume: bool = False,
+    compute_importance: bool = True
 ):
     """Main entry point."""
     try:
@@ -1195,6 +1206,7 @@ def main(
         config.MODEL_TYPE = model_type
         config.ALGORITHM = algorithm
         config.LAG = lag
+        config.COMPUTE_PERMUTATION_IMPORTANCE = compute_importance  # FIXED: Set the flag
         config.__post_init__()  # Re-run to apply LAG correctly
 
         if base_output_dir is None:
@@ -1227,6 +1239,7 @@ def main(
         logger.info(f"Lag: {config.LAG}")
         logger.info(f"EVENT_ID Cutoff: {config.EVENT_ID_CUTOFF} (train ≤ {config.EVENT_ID_CUTOFF}, test ≥ {config.EVENT_ID_CUTOFF + 1})")
         logger.info(f"Resume: {resume}")
+        logger.info(f"Compute Permutation Importance: {config.COMPUTE_PERMUTATION_IMPORTANCE}")  # ADDED
         logger.info(f"Output Directory: {output_dir.absolute()}")
         logger.info(f"Seed-Ensemble: {config.ENSEMBLE_RETRAIN_EACH_TEST}, Bootstrap: {config.BOOTSTRAP_TRAIN}")
 
@@ -1251,9 +1264,10 @@ def main(
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        print("Usage: python train_optimized_event_id.py <parquet_file> <model_type> <algorithm> <lag> [output_dir] [--resume]")
-        print("Example: python train_optimized_event_id.py data.parquet Unified LightGBM 1 outputs/")
-        print("Example: python train_optimized_event_id.py data.parquet Ensemble XGBoost 12 outputs/ --resume")
+        print("Usage: python train_optimized_final.py <parquet_file> <model_type> <algorithm> <lag> [output_dir] [--resume] [--no-importance]")
+        print("Example: python train_optimized_final.py data.parquet Unified LightGBM 1 outputs/")
+        print("Example: python train_optimized_final.py data.parquet Ensemble XGBoost 12 outputs/ --resume")
+        print("Example: python train_optimized_final.py data.parquet Unified LightGBM 1 outputs/ --no-importance")
         sys.exit(1)
 
     parquet_file = sys.argv[1]
@@ -1262,5 +1276,6 @@ if __name__ == "__main__":
     lag = int(sys.argv[4])
     output_dir = sys.argv[5] if len(sys.argv) > 5 and not sys.argv[5].startswith('--') else None
     resume = '--resume' in sys.argv
+    compute_importance = '--no-importance' not in sys.argv  # FIXED: Default True unless --no-importance flag
 
-    main(parquet_file, model_type, algorithm, lag, output_dir, resume)
+    main(parquet_file, model_type, algorithm, lag, output_dir, resume, compute_importance)
