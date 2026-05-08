@@ -1,8 +1,0 @@
-pandas
-numpy
-lightgbm
-xgboost==1.7.6
-scikit-learn
-scikit-optimize
-pyarrow
-scipy
