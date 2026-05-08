@@ -1,6 +1,0 @@
-pandas
-numpy
-lightgbm
-xgboost
-scikit-learn
-scikit-optimize
